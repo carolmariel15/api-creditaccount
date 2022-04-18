@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Unwrapped.Nullable;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class CreditAccount {
 	private String codeClient;
 	private TypeCredit typeCredit;
 	private Currency currency;
+	@Nullable
 	private Date membershipDate;
 	private double balance;
 	private double creditLimit;
