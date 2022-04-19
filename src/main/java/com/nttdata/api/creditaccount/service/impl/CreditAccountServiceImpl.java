@@ -35,5 +35,11 @@ public class CreditAccountServiceImpl implements ICreditAccountService {
 	public Mono<Void> delete(CreditAccount creditAccount) {
 		return creditAccountDAO.delete(creditAccount);
 	}
+
+	@Override
+	public Flux<CreditAccount> findByCodeClient(String codeClient) {
+		// TODO Auto-generated method stub
+		return creditAccountDAO.findByCodeClient(codeClient);
+	}
 	
 }

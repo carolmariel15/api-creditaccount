@@ -14,5 +14,7 @@ public interface ICreditAccountService {
 	public Mono<CreditAccount> save(CreditAccount creditAccount);
 	
 	public Mono<Void> delete(CreditAccount creditAccount);
+	
+	public Flux<CreditAccount> findByCodeClient(String codeClient);
 
 }
