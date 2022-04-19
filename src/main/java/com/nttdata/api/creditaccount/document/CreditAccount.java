@@ -11,7 +11,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Document(collection = "credit_account")
+@Document(collection = "creditaccount")
 public class CreditAccount {
 	
 	@Id
@@ -23,6 +23,6 @@ public class CreditAccount {
 	private Date membershipDate;
 	private double balance;
 	private double creditLimit;
-	private CreditCard creditCard;
+	private Card card;
 
 }

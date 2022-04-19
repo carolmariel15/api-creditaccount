@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreditCard {
+public class Card {
 	
 	private String cardNumber;
 	@JsonFormat(pattern = "dd/MM/yyyy")
