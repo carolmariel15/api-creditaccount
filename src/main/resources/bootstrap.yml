@@ -1,24 +1,7 @@
-server:
-  port: 8083
 spring:
   application:
     name: api-creditaccount
-  data:
-    mongodb:
-      database: dbCreditAccount
-      port: 27017
-      host: localhost
   cloud:
     config:
       enabled: true
-      uri: http://localhost:8080
-management:
-  endpoints:
-    web:
-      exposure:
-        include: *
-  endpoint:
-    health:
-      show-details: always
-    shutdown:
-      enabled: true
+      uri: http://localhost:8070
