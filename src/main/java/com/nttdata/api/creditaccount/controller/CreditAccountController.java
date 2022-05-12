@@ -1,33 +1,24 @@
 package com.nttdata.api.creditaccount.controller;
 
-import java.net.URI;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.validation.Valid;
-
+import com.nttdata.api.creditaccount.document.Card;
+import com.nttdata.api.creditaccount.document.CreditAccount;
+import com.nttdata.api.creditaccount.service.ICreditAccountService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.WebExchangeBindException;
-
-import com.nttdata.api.creditaccount.document.CreditAccount;
-import com.nttdata.api.creditaccount.service.ICreditAccountService;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import javax.validation.Valid;
+import java.net.URI;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/creditaccount")
@@ -40,41 +31,33 @@ public class CreditAccountController {
 
 	@GetMapping
 	public Mono<ResponseEntity<Flux<CreditAccount>>> findAll() {
-		LOGGER.info("metodo findAll: Retorna las cuentas de credito");
-		
 		return Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(creditAccountService.findAll()));
 	}
 	
 	
-	@GetMapping("credit/{codeClient}")
-	public Mono<ResponseEntity<Flux<CreditAccount>>> findByCodeClient(@PathVariable String codeClient) {
-		LOGGER.info("metodo findByCodeClient: Retorna cuentas de credito por cliente");
-		
+	@GetMapping("client/{codeClient}")
+	public Mono<ResponseEntity<Flux<CreditAccount>>> findByCodeClien(@PathVariable String codeClient) {
 		return Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(creditAccountService.findByCodeClient(codeClient)));
 	}
 
 	@GetMapping("/{id}")
 	public Mono<ResponseEntity<CreditAccount>> findById(@PathVariable String id) {
-		LOGGER.info("metodo findById: Busca una cuenta de credito por su ID");
-		
 		return creditAccountService.findById(id).map(ca -> ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ca))
 				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 
 	@PostMapping
-	public Mono<ResponseEntity<Map<String, Object>>> addCreditAccount(@Valid @RequestBody Mono<CreditAccount> monoCreditAccount) {
+	public Mono<ResponseEntity<Map<String, Object>>> addCreditCard(@Valid @RequestBody Mono<CreditAccount> monoCreditAccount) {
 		Map<String, Object> response = new HashMap<>();
 
 		return monoCreditAccount.flatMap(creditAccount -> {
 			creditAccount.setMembershipDate(new Date());
 			return creditAccountService.save(creditAccount).map(ca -> {
-				LOGGER.info("metodo addCreditAccount: Agrega una cuenta de credito");
-				
-				response.put("CreditAccount", ca);
-				response.put("message", "Successfully saved.");
+				response.put("CreditAccount", ca.getObj());
+				response.put("message", ca.getMessage());
 				response.put("timestamp", new Date());
 
-				return ResponseEntity.created(URI.create("/creditaccount/".concat(ca.getAccountNumber())))
+				return ResponseEntity.created(URI.create("/creditaccount/".concat(creditAccount.getAccountNumber())))
 						.contentType(MediaType.APPLICATION_JSON).body(response);
 			});
 		}).onErrorResume(t -> {
@@ -88,28 +71,45 @@ public class CreditAccountController {
 
 						return Mono.just(ResponseEntity.badRequest().body(response));
 					});
-		}).doOnError(e -> LOGGER.warn("metodo addCreditAccount: Hubo errores al guardar una cuenta de credito"));
+		});
 	}
 
 	@PutMapping("/{id}")
-	public Mono<ResponseEntity<CreditAccount>> editCreditAccount(@RequestBody CreditAccount creditAccount, @PathVariable String id) {
-		LOGGER.info("metodo editCreditAccount: Edita una cuenta de credito");
-		
+	public Mono<ResponseEntity<Object>> editCreditCard(@RequestBody CreditAccount creditAccount, @PathVariable String id) {
 		return creditAccountService.findById(id).flatMap(ca -> {
 			ca.setBalance(creditAccount.getBalance());
 			return creditAccountService.save(ca);
-		}).map(ca -> ResponseEntity.created(URI.create("/creditaccount/".concat(ca.getAccountNumber())))
-				.contentType(MediaType.APPLICATION_JSON).body(ca)).defaultIfEmpty(ResponseEntity.notFound().build());
+		}).map(ca -> ResponseEntity.created(URI.create("/creditaccount/".concat(creditAccount.getAccountNumber())))
+				.contentType(MediaType.APPLICATION_JSON).body(ca.getObj())).defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 
 	@DeleteMapping("/{id}")
-	public Mono<ResponseEntity<Void>> deleteCreditAccount(@PathVariable String id) {
-		LOGGER.info("metodo deleteCreditAccount: Elimina una cuenta de credito");
-		
+	public Mono<ResponseEntity<Void>> deleteCreditCard(@PathVariable String id) {
 		return creditAccountService.findById(id).flatMap(ca -> {
 			return creditAccountService.delete(ca).then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)));
 
 		}).defaultIfEmpty(new ResponseEntity<Void>(HttpStatus.NOT_FOUND));
+	}
+
+	@GetMapping("/client/{codeClient}/{typeAccount}")
+	public Mono<ResponseEntity<Flux<CreditAccount>>> findByCodeClientAndTypeAccount(
+			@PathVariable String codeClient,  @PathVariable Integer typeAccount ) {
+		return Mono.just(ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
+				.body(creditAccountService.findByCodeClientAndTypeAccountId(codeClient,typeAccount)));
+	}
+
+
+	@PutMapping("/client/{codeClient}/{accountNumber}")
+	public Mono<ResponseEntity<CreditAccount>> editCard(@RequestBody Card card, @PathVariable String codeClient, @PathVariable String accountNumber) {
+		return creditAccountService.findByCodeClientAndAccountNumber(codeClient,accountNumber)
+				.flatMap(ca->{
+							ca.setCard(card);
+							return creditAccountService.saveCard(ca);
+						}).map(ba -> ResponseEntity.created(URI.create("/creditaccount".concat("/client/").concat(codeClient).concat("/").concat(accountNumber)))
+						.contentType(MediaType.APPLICATION_JSON)
+						.body(ba))
+				.defaultIfEmpty(ResponseEntity.notFound().build());
+
 	}
 
 }

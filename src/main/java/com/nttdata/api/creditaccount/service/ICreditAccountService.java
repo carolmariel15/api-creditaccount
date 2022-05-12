@@ -1,7 +1,7 @@
 package com.nttdata.api.creditaccount.service;
 
 import com.nttdata.api.creditaccount.document.CreditAccount;
-
+import com.nttdata.api.creditaccount.models.Response;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -11,10 +11,16 @@ public interface ICreditAccountService {
 	
 	public Mono<CreditAccount> findById(String id);
 	
-	public Mono<CreditAccount> save(CreditAccount creditAccount);
+	public Mono<Response> save(CreditAccount creditAccount);
 	
 	public Mono<Void> delete(CreditAccount creditAccount);
 	
 	public Flux<CreditAccount> findByCodeClient(String codeClient);
+
+	public Flux<CreditAccount> findByCodeClientAndTypeAccountId(String codeClient, Integer typeAccountId);
+
+	public Mono<CreditAccount> findByCodeClientAndAccountNumber(String codeClient, String accountNumber);
+
+	public Mono<CreditAccount> saveCard(CreditAccount creditAccount);
 
 }
